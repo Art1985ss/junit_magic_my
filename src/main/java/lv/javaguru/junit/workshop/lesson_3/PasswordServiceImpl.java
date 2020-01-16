@@ -13,7 +13,7 @@ public class PasswordServiceImpl implements PasswordService {
     }
 
     @Override
-    public String createPassword(String newPassword) {
+    public String checkPassword(String newPassword) {
         validationRules.forEach(v -> v.validate(newPassword));
         return newPassword;
     }

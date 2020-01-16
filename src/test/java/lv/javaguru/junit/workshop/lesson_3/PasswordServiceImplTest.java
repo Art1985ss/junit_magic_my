@@ -1,25 +1,25 @@
 package lv.javaguru.junit.workshop.lesson_3;
 
 import lv.javaguru.junit.workshop.lesson_3.validation.*;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PasswordServiceImplTest {
     @Mock
-    public UserRepository userRepository;
+    public PasswordRepository passwordRepository;
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -35,43 +35,48 @@ public class PasswordServiceImplTest {
 
 
     @Test
-    public void passwordTooShort() {
+    public void passwordTooShortFail() {
         newPassword = "V1";
         expectedException.expect(PasswordException.class);
         expectedException.expectMessage("Password length must be at least 5 symbols.");
-        victim.createPassword(newPassword);
+        victim.checkPassword(newPassword);
     }
 
     @Test
-    public void shouldContainChar() {
+    public void shouldContainCharFail() {
         newPassword = "123456";
         expectedException.expect(PasswordException.class);
         expectedException.expectMessage("Password must contain letters.");
-        victim.createPassword(newPassword);
+        victim.checkPassword(newPassword);
     }
 
     @Test
-    public void shouldContainNumber() {
+    public void shouldContainNumberFail() {
         newPassword = "abcdef";
         expectedException.expect(PasswordException.class);
         expectedException.expectMessage("Password must contain numbers.");
-        victim.createPassword(newPassword);
+        victim.checkPassword(newPassword);
     }
 
     @Test
-    public void passwordUsedLast3Times() {
+    public void passwordUsedLast3TimesFail() {
         newPassword = "Vasja1";
         expectedException.expect(PasswordException.class);
         expectedException.expectMessage("New password should be different from last 3 used.");
-        when(userRepository.usedLast3Times(newPassword)).thenReturn(true);
-        victim.createPassword(newPassword);
+        when(passwordRepository.get3LastPasswords()).thenReturn(createOldPasswords());
+        victim.checkPassword(newPassword);
+        verify(passwordRepository).get3LastPasswords();
     }
 
     @Test
-    public void shouldCreatePassword(){
-        newPassword = "Vasja1";
-        when(userRepository.usedLast3Times(newPassword)).thenReturn(false);
-        String createdPassword = victim.createPassword(newPassword);
+    public void shouldAcceptPasswordSuccess() {
+        newPassword = "Vasja2";
+        when(passwordRepository.get3LastPasswords()).thenReturn(createOldPasswords());
+        String createdPassword = victim.checkPassword(newPassword);
         assertEquals(newPassword, createdPassword);
+    }
+
+    private List<String> createOldPasswords() {
+        return Arrays.asList("Vasja1", "Kurva1", "Abcdrkg1");
     }
 }
